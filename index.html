@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Breath of the Builder — Robert Wang</title>
+    <meta name="description" content="A Zelda-inspired open-world portfolio. Explore the island, discover the shrines, meet the builder." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗡️</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <!-- ===== Title screen ===== -->
+    <div id="title-screen">
+      <div class="title-inner">
+        <div class="title-crest">◆</div>
+        <h2 class="title-kicker">Robert Wang presents</h2>
+        <h1 class="title-logo">Breath<span> of the </span>Builder</h1>
+        <p class="title-sub">An open-world portfolio &mdash; explore the island, discover the shrines.</p>
+        <button id="btn-start" class="title-start">▸ &nbsp;Begin the Journey</button>
+        <p class="title-hint">WASD / arrows to move &middot; drag to look &middot; Shift to sprint &middot; Space to jump &middot; hold Space in air to glide &middot; E to examine</p>
+        <a class="title-skip" href="#" id="btn-skip">recruiter in a hurry? skim the scroll instead ↗</a>
+      </div>
+    </div>
+
+    <!-- ===== HUD ===== -->
+    <div id="hud" class="hidden">
+      <div id="quest">
+        <div class="quest-title">⟡ Shrines of the Builder</div>
+        <div class="quest-progress"><span id="quest-count">0</span>/<span id="quest-total">7</span> discovered</div>
+        <div id="quest-dots"></div>
+        <div id="spirit">
+          <div class="spirit-title">✦ Spirit of the Builder</div>
+          <div class="spirit-progress"><span id="spirit-count">0</span>/<span id="spirit-total">0</span> skill orbs gathered</div>
+        </div>
+      </div>
+      <div id="stamina-wrap"><div id="stamina"></div></div>
+      <div id="prompt" class="hidden"><span class="key">E</span><span id="prompt-text">Examine</span></div>
+      <div id="toast" class="hidden"></div>
+      <div id="pickup" class="hidden"><span id="pickup-text"></span></div>
+      <div id="region-banner" class="hidden"><span id="region-banner-text"></span></div>
+      <div id="controls-hint">WASD move &middot; drag look &middot; Shift sprint &middot; Space jump &middot; hold Space in air — glide &middot; M music</div>
+      <button id="btn-music" title="Toggle music (M)">♪</button>
+      <button id="btn-e" class="hidden touch-only">E</button>
+      <button id="btn-glide" class="hidden touch-only">🪂</button>
+      <div id="joystick" class="hidden touch-only"><div id="joystick-knob"></div></div>
+    </div>
+
+    <!-- ===== Shrine / project panel ===== -->
+    <div id="panel-backdrop" class="hidden">
+      <div id="panel">
+        <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
+        <div class="panel-corner bl"></div><div class="panel-corner br"></div>
+        <div class="panel-head">
+          <div>
+            <div id="panel-category" class="panel-category"></div>
+            <h2 id="panel-title"></h2>
+            <div id="panel-subtitle" class="panel-subtitle"></div>
+          </div>
+          <button id="panel-close" aria-label="Close">✕</button>
+        </div>
+        <div class="panel-body">
+          <p id="panel-desc"></p>
+          <div id="panel-metrics" class="panel-metrics"></div>
+          <div id="panel-features-wrap">
+            <h3>Abilities granted</h3>
+            <ul id="panel-features"></ul>
+          </div>
+          <div id="panel-tech-wrap">
+            <h3>Forged with</h3>
+            <div id="panel-tech" class="panel-tech"></div>
+          </div>
+          <div id="panel-links" class="panel-links"></div>
+        </div>
+        <div class="panel-foot">press <span class="key">E</span> or <span class="key">Esc</span> to return to the world</div>
+      </div>
+    </div>
+
+    <!-- ===== Completion credits ===== -->
+    <div id="credits-backdrop" class="hidden">
+      <div id="credits">
+        <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
+        <div class="panel-corner bl"></div><div class="panel-corner br"></div>
+        <div class="credits-kicker">✦ all shrines discovered ✦</div>
+        <h2 class="credits-title">The island remembers you</h2>
+        <div class="credits-name" id="credits-name"></div>
+        <div class="credits-role" id="credits-role"></div>
+        <div class="panel-links credits-links" id="credits-links"></div>
+        <button id="btn-keep-exploring">Keep exploring ⟶</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
