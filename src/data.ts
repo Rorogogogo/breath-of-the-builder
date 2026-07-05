@@ -1,7 +1,7 @@
 /**
  * data.ts — single source of truth for all portfolio content in the world.
  * Ported from v2 (builder-island) portfolio-data.ts.
- * Search for `REPLACE` to find placeholder links.
+ * All copy and links for the portfolio live here.
  */
 
 export type SiteKind = 'project' | 'about' | 'contact';
@@ -40,8 +40,8 @@ export const profile = {
   location: 'Sydney, Australia',
   email: 'mailto:xwang.robert@gmail.com',
   github: 'https://github.com/Rorogogogo',
-  linkedin: 'https://www.linkedin.com/in/robertwang', // REPLACE
-  resume: '/resume.pdf', // REPLACE: drop a real resume.pdf into /public
+  linkedin: 'https://www.linkedin.com/in/robert-wang-cs/',
+  resume: '/resume.pdf',
 };
 
 export const sites: Site[] = [
@@ -73,8 +73,8 @@ export const sites: Site[] = [
       { label: 'Footprint', value: 'Lightweight' },
     ],
     links: [
-      { label: 'GitHub', href: 'https://github.com/robertwang/nomoreide', primary: true }, // REPLACE
-      { label: 'Live Demo', href: 'https://example.com/nomoreide' }, // REPLACE
+      { label: 'GitHub', href: 'https://github.com/Rorogogogo/nomoreide', primary: true },
+      { label: 'Live Demo', href: 'https://www.nomoreide.com' },
     ],
     accent: '#6ee7ff',
     pos: [-30, -6],
@@ -83,13 +83,13 @@ export const sites: Site[] = [
   {
     id: 'branctl',
     kind: 'project',
-    title: 'Branctl',
+    title: 'Brainctl',
     shrineName: 'Shrine of the Branching Path',
     category: 'Developer Tools',
     featured: true,
     summary: 'A modern control tower for branches, workflows, and AI-assisted engineering tasks.',
     description:
-      'Branctl is a developer control tool focused on making branch-based workflows, local development operations, and AI-assisted engineering tasks easier to manage from one clean interface — a command/control layer for developers; a modern control tower for managing branches, workflows, and development commands.',
+      'Brainctl is a developer control tool focused on making branch-based workflows, local development operations, and AI-assisted engineering tasks easier to manage from one clean interface — a command/control layer for developers; a modern control tower for managing branches, workflows, and development commands.',
     features: [
       'Branch workflow control',
       'Local project command center',
@@ -104,7 +104,7 @@ export const sites: Site[] = [
       { label: 'Interface', value: 'Command-first' },
       { label: 'Status', value: 'In progress' },
     ],
-    links: [{ label: 'GitHub', href: 'https://github.com/robertwang/branctl', primary: true }], // REPLACE
+    links: [{ label: 'GitHub', href: 'https://github.com/Rorogogogo/brainctl', primary: true }],
     accent: '#a78bfa',
     pos: [28, -12],
     plateau: 7.5,
@@ -153,7 +153,7 @@ export const sites: Site[] = [
       { label: 'Interactions', value: '30k+' },
       { label: 'Submissions', value: '50+' },
     ],
-    links: [{ label: 'Live Demo', href: 'https://example.com/standtogether', primary: true }], // REPLACE
+    links: [{ label: 'Live Demo', href: 'https://standtogether.club', primary: true }],
     accent: '#fbbf24',
     pos: [50, 32],
     plateau: 5,
@@ -308,4 +308,4 @@ export const skillTree: SkillGroup[] = [
 export const totalSkills = skillTree.reduce((n, g) => n + g.skills.length, 0);
 
 /** v1/v2 fallback for the "recruiter in a hurry" link on the title screen */
-export const flatFallbackUrl = 'https://github.com/Rorogogogo'; // REPLACE with hosted flat portfolio
+export const flatFallbackUrl = 'https://robert.jobjourney.me/';
