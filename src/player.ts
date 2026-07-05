@@ -197,63 +197,87 @@ export class Player {
     sword.rotation.z = 0.6;
     this.body.add(back, sword);
 
-    /* ---- paraglider: striped cloth dome + wooden frame + suspension lines ---- */
+    /* ---- paraglider: swept hang-glider wing + wooden A-frame ----
+     * Original design in the spirit of an adventurer's glider: an arched
+     * cloth wing with a scalloped trailing edge over a wooden spar/keel/rib
+     * frame, held by two grips. Portfolio colours, no Nintendo assets. */
     this.canopy = new THREE.Group();
 
-    // canopy dome: a sphere cap, non-indexed so each face takes a flat stripe
-    const domeGeo = new THREE.SphereGeometry(1.55, 18, 6, 0, Math.PI * 2, 0, 0.8).toNonIndexed();
-    const dp = domeGeo.getAttribute('position');
-    const stripeCols = new Float32Array(dp.count * 3);
-    const cA = new THREE.Color('#e04a3f'); // scarf red
-    const cB = new THREE.Color('#efe6cf'); // parchment
-    for (let f = 0; f < dp.count; f += 3) {
-      // colour by face-centroid longitude → 12 crisp alternating gores
-      let cx = 0;
-      let cz = 0;
-      for (let v = 0; v < 3; v++) {
-        cx += dp.getX(f + v);
-        cz += dp.getZ(f + v);
-      }
-      const gore = Math.floor(((Math.atan2(cz, cx) + Math.PI) / (Math.PI * 2)) * 12 + 0.5);
-      const c = gore % 2 === 0 ? cA : cB;
-      for (let v = 0; v < 3; v++) stripeCols.set([c.r, c.g, c.b], (f + v) * 3);
+    const SPAN = 3.7;
+    const CHORD = 2.0;
+    const HUB_Y = 0.62; // wing-centre height inside the canopy group
+    const arch = (u: number): number => 0.55 * (1 - u * u) - 0.12 * Math.pow(Math.abs(u), 4);
+    const taper = (u: number): number => 0.55 + 0.45 * Math.sqrt(Math.max(0, 1 - u * u * 0.92));
+    const sweep = (u: number): number => 0.32 * u * u;
+
+    const wingGeo = new THREE.PlaneGeometry(SPAN, CHORD, 18, 6);
+    wingGeo.rotateX(-Math.PI / 2); // lie flat: x = span, z = chord (front −, back +)
+    const wp = wingGeo.getAttribute('position') as THREE.BufferAttribute;
+    const wingCols = new Float32Array(wp.count * 3);
+    const cCloth = new THREE.Color('#efe6cf'); // parchment
+    const cBand = new THREE.Color('#2e9e9b'); // tunic teal
+    const cTip = new THREE.Color('#e04a3f'); // scarf red
+    for (let i = 0; i < wp.count; i++) {
+      const u = wp.getX(i) / (SPAN / 2); // −1 … 1 across the span
+      const v = wp.getZ(i) / CHORD + 0.5; // 0 front … 1 back
+      let y = arch(u);
+      let z = wp.getZ(i) * taper(u) + sweep(u);
+      // cloth sags between the ribs toward the back → scalloped silhouette
+      const sag = Math.abs(Math.sin(((u + 1) / 0.4) * Math.PI));
+      y -= sag * 0.09 * v * v;
+      z -= sag * 0.2 * Math.pow(v, 4);
+      wp.setY(i, y);
+      wp.setZ(i, z);
+      const col = v < 0.16 ? cBand : Math.abs(u) > 0.82 ? cTip : Math.abs(u) < 0.09 ? cBand : cCloth;
+      wingCols.set([col.r, col.g, col.b], i * 3);
     }
-    domeGeo.setAttribute('color', new THREE.BufferAttribute(stripeCols, 3));
+    wingGeo.setAttribute('color', new THREE.BufferAttribute(wingCols, 3));
+    wingGeo.computeVertexNormals();
     this.canopyDome = M(
-      domeGeo,
+      wingGeo,
       new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gm, side: THREE.DoubleSide })
     );
-    this.canopyDome.scale.set(1.45, 0.58, 1.05);
-    const finial = M(new THREE.SphereGeometry(0.07, 8, 8), gold);
-    finial.position.y = 0.94;
-    this.canopy.add(this.canopyDome, finial);
+    this.canopyDome.position.y = HUB_Y;
+    this.canopy.add(this.canopyDome);
 
-    // wooden frame: crossbar + fore-aft spar just under the rim
-    const rimY = 1.1 * 0.58; // cap-rim height after the dome's y-scale
-    const bar = M(new THREE.CylinderGeometry(0.035, 0.035, 2.6, 6), leather);
-    bar.rotation.z = Math.PI / 2;
-    bar.position.y = rimY;
-    const spar = M(new THREE.CylinderGeometry(0.03, 0.03, 1.7, 6), leather);
-    spar.rotation.x = Math.PI / 2;
-    spar.position.y = rimY;
-    this.canopy.add(bar, spar);
+    // leading-edge spar: a wooden tube bent along the front of the wing
+    const sparPts: THREE.Vector3[] = [];
+    for (const u of [-1, -0.5, 0, 0.5, 1]) {
+      sparPts.push(
+        new THREE.Vector3(u * (SPAN / 2), HUB_Y + arch(u) - 0.02, -(CHORD / 2) * taper(u) + sweep(u))
+      );
+    }
+    const sparGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sparPts), 16, 0.035, 6);
+    this.canopy.add(M(sparGeo, leather));
 
-    // grips the hero hangs from + four lines out to the crossbar ends
+    // keel + ribs under the cloth
+    const keel = M(new THREE.CylinderGeometry(0.032, 0.032, CHORD + 0.15, 6), leather);
+    keel.rotation.x = Math.PI / 2;
+    keel.position.set(0, HUB_Y - 0.05, 0.05);
+    this.canopy.add(keel);
+    for (const u of [-0.6, -0.2, 0.2, 0.6]) {
+      const rib = M(new THREE.BoxGeometry(0.035, 0.028, CHORD * taper(u) * 0.92), leather);
+      rib.position.set(u * (SPAN / 2), HUB_Y + arch(u) - 0.045, sweep(u));
+      this.canopy.add(rib);
+    }
+    const finial = M(new THREE.SphereGeometry(0.06, 8, 8), gold);
+    finial.position.set(0, HUB_Y + 0.6, 0.02);
+    this.canopy.add(finial);
+
+    // A-frame: struts from the keel down to two hanging grips
     for (const sx of [-1, 1]) {
-      const grip = M(new THREE.CylinderGeometry(0.028, 0.028, 0.8, 5), dark);
-      grip.position.set(sx * 0.42, rimY - 0.42, 0.04);
-      grip.rotation.z = sx * 0.12;
-      this.canopy.add(grip);
-      for (const sz of [-0.5, 0.5]) {
-        const line = M(new THREE.CylinderGeometry(0.016, 0.016, 1.05, 4), dark);
-        line.position.set(sx * 0.85, rimY - 0.38, sz * 0.5);
-        line.rotation.z = sx * 0.72;
-        line.rotation.x = -sz * 0.55;
-        this.canopy.add(line);
-      }
+      const strut = M(new THREE.CylinderGeometry(0.026, 0.026, 0.62, 5), leather);
+      strut.position.set(sx * 0.21, HUB_Y - 0.28, 0.05);
+      strut.rotation.z = sx * 0.82;
+      this.canopy.add(strut);
+      const gripBar = M(new THREE.CylinderGeometry(0.028, 0.028, 0.52, 5), dark);
+      gripBar.position.set(sx * 0.42, HUB_Y - 0.62, 0.05);
+      this.canopy.add(gripBar);
     }
 
-    this.canopy.position.y = 2.05;
+    this.canopy.position.y = 2.0;
+    // nose-up incidence so the camera behind the hero sees the wing surface
+    this.canopy.rotation.x = -0.32;
     this.canopy.visible = false;
     this.body.add(this.canopy);
 
@@ -499,9 +523,9 @@ export class Player {
         this.legL.rotation.x = 0.25 + sway * 0.12;
         this.legR.rotation.x = 0.1 - sway * 0.12;
         this.body.rotation.x = THREE.MathUtils.damp(this.body.rotation.x, 0.22, 6, dt);
-        // cloth breathes and the canopy rocks gently in the airflow
-        this.canopyDome.scale.y = 0.58 + Math.sin(tNow * 8.5) * 0.02;
-        this.canopy.rotation.x = Math.sin(tNow * 2.8) * 0.045;
+        // cloth breathes and the wing rocks gently in the airflow
+        this.canopyDome.scale.y = 1 + Math.sin(tNow * 8.5) * 0.05;
+        this.canopy.rotation.x = -0.32 + Math.sin(tNow * 2.8) * 0.045;
       } else {
         this.legL.rotation.x = 0.5;
         this.legR.rotation.x = -0.3;
