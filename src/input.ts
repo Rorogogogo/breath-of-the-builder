@@ -35,11 +35,10 @@ export class Input {
   readonly isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 
   private keys = new Set<string>();
-  private dragging = false;
-  private lastX = 0;
-  private lastY = 0;
   /** pointerId → role, so joystick and camera drags can coexist */
   private touchRoles = new Map<number, 'joystick' | 'camera'>();
+  /** pointerId → last position, for camera deltas and pinch zoom */
+  private pointerPos = new Map<number, { x: number; y: number }>();
   private joyOrigin = { x: 0, y: 0 };
 
   /** when true (a panel is open), gameplay input is ignored */
@@ -66,14 +65,18 @@ export class Input {
         e.stopPropagation();
         this.state.interactPressed = true;
       });
-      // 🪂 hold-to-glide button, shown only while airborne (see UI.setGlideButton)
-      const btnGlide = document.getElementById('btn-glide')!;
-      btnGlide.addEventListener('pointerdown', (e) => {
+      // jump button — full Space parity: tap = jump / burst out of water,
+      // hold while airborne = glide (icon handled by UI.setJumpButton)
+      const btnJump = document.getElementById('btn-jump')!;
+      btnJump.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
+        e.preventDefault();
+        if (this.blocked) return;
+        this.state.jumpPressed = true;
         this.state.jumpHeld = true;
       });
       for (const ev of ['pointerup', 'pointercancel', 'pointerleave'] as const) {
-        btnGlide.addEventListener(ev, () => {
+        btnJump.addEventListener(ev, () => {
           this.state.jumpHeld = false;
         });
       }
@@ -129,14 +132,13 @@ export class Input {
       this.positionJoystick(e.clientX, e.clientY, e.clientX, e.clientY);
     } else {
       this.touchRoles.set(e.pointerId, 'camera');
-      this.dragging = true;
-      this.lastX = e.clientX;
-      this.lastY = e.clientY;
     }
+    this.pointerPos.set(e.pointerId, { x: e.clientX, y: e.clientY });
   };
 
   private onPointerMove = (e: PointerEvent): void => {
     const role = this.touchRoles.get(e.pointerId);
+    if (!role) return;
     if (role === 'joystick') {
       const dx = e.clientX - this.joyOrigin.x;
       const dy = e.clientY - this.joyOrigin.y;
@@ -145,15 +147,27 @@ export class Input {
       const cl = len > max ? max / len : 1;
       this.state.moveX = (dx * cl) / max;
       this.state.moveY = (-dy * cl) / max;
-      this.state.sprint = len > max * 1.7;
+      this.state.sprint = len > max * 1.55;
       this.positionJoystick(this.joyOrigin.x, this.joyOrigin.y, this.joyOrigin.x + dx * cl, this.joyOrigin.y + dy * cl);
-    } else if (role === 'camera' || (this.dragging && !this.isTouch)) {
-      if (this.blocked) return;
-      this.state.lookDX += e.clientX - this.lastX;
-      this.state.lookDY += e.clientY - this.lastY;
-      this.lastX = e.clientX;
-      this.lastY = e.clientY;
+    } else if (!this.blocked) {
+      const camIds = [...this.touchRoles].filter(([, r]) => r === 'camera').map(([id]) => id);
+      if (camIds.length >= 2) {
+        // two fingers on the camera side = pinch zoom
+        const [a, b] = camIds;
+        const pa = this.pointerPos.get(a)!;
+        const pb = this.pointerPos.get(b)!;
+        const oldDist = Math.hypot(pa.x - pb.x, pa.y - pb.y);
+        const na = e.pointerId === a ? { x: e.clientX, y: e.clientY } : pa;
+        const nb = e.pointerId === b ? { x: e.clientX, y: e.clientY } : pb;
+        const newDist = Math.hypot(na.x - nb.x, na.y - nb.y);
+        this.state.zoomDelta += (oldDist - newDist) * 2.4;
+      } else {
+        const prev = this.pointerPos.get(e.pointerId)!;
+        this.state.lookDX += e.clientX - prev.x;
+        this.state.lookDY += e.clientY - prev.y;
+      }
     }
+    this.pointerPos.set(e.pointerId, { x: e.clientX, y: e.clientY });
   };
 
   private onPointerUp = (e: PointerEvent): void => {
@@ -165,7 +179,7 @@ export class Input {
       document.getElementById('joystick')!.classList.add('hidden');
     }
     this.touchRoles.delete(e.pointerId);
-    if (this.touchRoles.size === 0) this.dragging = false;
+    this.pointerPos.delete(e.pointerId);
   };
 
   private onWheel = (e: WheelEvent): void => {
@@ -177,6 +191,7 @@ export class Input {
     const joy = document.getElementById('joystick')!;
     const knob = document.getElementById('joystick-knob')!;
     joy.classList.remove('hidden');
+    knob.classList.toggle('sprint', this.state.sprint);
     joy.style.left = `${ox - 60}px`;
     joy.style.top = `${oy - 60}px`;
     joy.style.bottom = 'auto';

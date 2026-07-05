@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Breath of the Builder — Robert Wang</title>
     <meta name="description" content="A Zelda-inspired open-world portfolio. Explore the island, discover the shrines, meet the builder." />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗡️</text></svg>" />
@@ -21,7 +21,10 @@
         <h1 class="title-logo">Breath<span> of the </span>Builder</h1>
         <p class="title-sub">An open-world portfolio &mdash; explore the island, discover the shrines.</p>
         <button id="btn-start" class="title-start">▸ &nbsp;Begin the Journey</button>
-        <p class="title-hint">WASD / arrows to move &middot; drag to look &middot; Shift to sprint &middot; Space to jump &middot; hold Space in air to glide &middot; E to examine</p>
+        <p class="title-hint">
+          <span class="hint-desktop">WASD / arrows to move &middot; drag to look &middot; Shift to sprint &middot; Space to jump &middot; hold Space in air to glide &middot; E to examine</span>
+          <span class="hint-touch">left thumb to move (push far to sprint) &middot; drag right side to look &middot; pinch to zoom &middot; ⤒ to jump, hold in air to glide</span>
+        </p>
         <a class="title-skip" href="#" id="btn-skip">recruiter in a hurry? skim the scroll instead ↗</a>
       </div>
     </div>
@@ -45,7 +48,7 @@
       <div id="controls-hint">WASD move &middot; drag look &middot; Shift sprint &middot; Space jump &middot; hold Space in air — glide &middot; M music</div>
       <button id="btn-music" title="Toggle music (M)">♪</button>
       <button id="btn-e" class="hidden touch-only">E</button>
-      <button id="btn-glide" class="hidden touch-only">🪂</button>
+      <button id="btn-jump" class="touch-only">⤒</button>
       <div id="joystick" class="hidden touch-only"><div id="joystick-knob"></div></div>
     </div>
 

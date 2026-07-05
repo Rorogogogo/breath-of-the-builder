@@ -26,7 +26,9 @@ export class UI {
       dots.appendChild(d);
     }
     $('panel-close').addEventListener('click', () => this.closePanel());
-    $('panel-backdrop').addEventListener('click', (e) => {
+    // close on pointerdown, not click: on touch, the tap that opens the panel
+    // emits a trailing click that would hit the backdrop and close it again
+    $('panel-backdrop').addEventListener('pointerdown', (e) => {
       if (e.target === e.currentTarget) this.closePanel();
     });
     window.addEventListener('keydown', (e) => {
@@ -53,10 +55,14 @@ export class UI {
     }
   }
 
-  /** show the touch 🪂 button only while airborne */
-  setGlideButton(airborne: boolean): void {
-    if (!document.body.classList.contains('touch')) return;
-    $('btn-glide').classList.toggle('hidden', !airborne);
+  private jumpAirborne = false;
+
+  /** swap the touch jump button to the paraglider icon while airborne */
+  setJumpButton(airborne: boolean): void {
+    if (!document.body.classList.contains('touch') || airborne === this.jumpAirborne) return;
+    this.jumpAirborne = airborne;
+    $('btn-jump').textContent = airborne ? '🪂' : '⤒';
+    $('btn-jump').classList.toggle('airborne', airborne);
   }
 
   setStamina(frac: number, exhausted: boolean): void {

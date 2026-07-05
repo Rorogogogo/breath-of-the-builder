@@ -39,7 +39,7 @@ function smoothstep(e0: number, e1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
-export function createSky(scene: THREE.Scene): {
+export function createSky(scene: THREE.Scene, shadowMapSize = 2048): {
   update: (t: number) => void;
   /** night amount in [0,1] — handy for other systems (fireflies, music…) */
   nightAmount: () => number;
@@ -78,7 +78,7 @@ export function createSky(scene: THREE.Scene): {
   const sun = new THREE.DirectionalLight(DAY.sun, DAY.sunI);
   sun.position.set(90, 130, -60);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(shadowMapSize, shadowMapSize);
   const s = 140;
   sun.shadow.camera.left = -s;
   sun.shadow.camera.right = s;

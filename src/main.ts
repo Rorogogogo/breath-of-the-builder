@@ -24,8 +24,12 @@ const VISIT_RADIUS = 13;
 /* ---------------- renderer / scene ---------------- */
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
+// phones: cap the pixel ratio harder — dpr-3 screens can't fill that many
+// fragments with soft shadows at 60 fps
+const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+const maxPixelRatio = coarsePointer ? 1.6 : 2;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -43,7 +47,7 @@ scene.add(createTerrain());
 scene.add(createSeaFloor());
 const water = createWater();
 scene.add(water.mesh);
-const sky = createSky(scene);
+const sky = createSky(scene, coarsePointer ? 1024 : 2048);
 const vegetation = createVegetation(scene);
 const { shrines, update: updateShrines, markDiscovered, celebrate } = createShrines(scene);
 const fairy = createFairy(scene);
@@ -138,6 +142,7 @@ if (import.meta.env.DEV) {
   w.__orbs = (): number[][] =>
     orbs.orbs.filter((o) => !o.collected).map((o) => [o.position.x, o.position.y, o.position.z]);
   w.__phase = (p: number | null): void => sky.setPhase(p);
+  w.__camDist = (): number => player.camDist;
 }
 
 /* ---------------- main loop ---------------- */
@@ -183,7 +188,7 @@ function frame(): void {
     input.blocked = ui.panelOpen;
     player.update(dt, input, camera);
     ui.setStamina(player.stamina / 100, player.exhausted);
-    ui.setGlideButton(player.airborne);
+    ui.setJumpButton(player.airborne);
 
     // skill orbs, dust puffs, sea-rescue toast
     orbs.update(t, player.position, (orb) => {
